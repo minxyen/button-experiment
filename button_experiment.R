@@ -2,8 +2,8 @@
 
 # Read Data
 library("tidyverse")
-test.table <- read_csv("test_table.csv")
-user.table <- read_csv("user_table.csv")
+test.table <- read_csv("data/test_table.csv")
+user.table <- read_csv("data/user_table.csv")
 head(test.table)
 head(user.table)
 
@@ -24,18 +24,28 @@ print(paste("[control] number: ", sum(test.table$test == 0)))
 
 
 # Check the experiment entity -> per purchase
-test.table %>% count(user_id, test)
+test.table %>% count(user_id, test, name='counts')
 
-# Join tables
+# Join tables 
 test.data <- left_join(test.table, user.table, by = "user_id")
 head(test.data)
 
+# correct each variable type
+test.data$age <- as.integer(test.data$age)
+
+# children: 0 - 14, youth: 15 - 24, adult: 25 - 64, senior: 65 
+test.data$age_group <- cut(test.data$age, c(0, 14, 24, 64, Inf),
+                           c("childen", "youth", "adult", "senior"),
+                           include.lowest=TRUE)
+test.data$age_group <- as.factor(test.data$age_group)
+
 test.data$date <- as.Date(test.data$date, format = "%Y/%m/%d")
-for (i in c(3,4,6,7,8)){
+
+for (i in c(3,4,6,7,9,10)){
     test.data[, i] <- as.factor(test.data[[i]])
 }
-head(test.data)
 
+head(test.data)
 
 # Descriptive Statistic:
 summary(test.data)
@@ -57,6 +67,10 @@ test.data %>%
     group_by(service) %>%
     summarize(mean_purchase_amount = mean(purchase_amount))
 
+test.data %>%
+    group_by(age_group) %>%
+    summarize(mean_purchase_amount = mean(purchase_amount))
+
 # Counrty - Test Cross Effect
 test.data %>%
     group_by(country, test) %>%
@@ -72,7 +86,7 @@ t.test(test.data[test.data$test==1, ]$purchase_amount,
 # Analysis of Variance, ANOVA
 # model 01
 aov.model <- aov(purchase_amount ~ 
-                 test + country + device + gender + service, 
+                 test + country + device + gender + service + age_group,
                  test.data)
 summary(aov.model)
 
