@@ -54,7 +54,6 @@ test.data %>%
     group_by(test) %>%
     summarize(mean_purchase_amount = mean(purchase_amount))
 
-
 test.data %>%
     group_by(device) %>%
     summarize(mean_purchase_amount = mean(purchase_amount))
@@ -83,6 +82,8 @@ t.test(test.data[test.data$test==1, ]$purchase_amount,
     test.data[test.data$test==0, ]$purchase_amount,
     alternative = 'greater')
 
+#t.test(purchase_amount~test, data=test.data)
+
 # Analysis of Variance, ANOVA
 # model 01
 aov.model <- aov(purchase_amount ~ 
@@ -109,11 +110,12 @@ TukeyHSD(interaction.model, "country")
 
 # Result Presentation - Data Viz
 # Treatment Group v.s. Control Group
+
+# Method 1)  Time Series - differences per day
 daily.purchase <- test.data %>%
     group_by(date, test) %>%
     summarise(purcahse_amount = mean(purchase_amount))
 
-# Method 1)  Time Series - differences per day
 ggplot(daily.purchase, aes(x=date, y=purcahse_amount, color=test)) +
     geom_line() +
     geom_point() +
